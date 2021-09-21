@@ -1,12 +1,10 @@
 #!/bin/bash
 
-if [ -z "$1" ] || [ -z "$2" ]; then
-  echo "Usage: $0 KEY DEGREE";
+if [ -z "$1" ]; then
+  echo "Usage: $0 <drive>:<steering>";
+  echo
+  echo "drive and steering are both 3 digit values between 000 and 180"
   exit 1
 fi
 
-KEY=$1
-ANGLE=$2
-
-echo "Setting $KEY to angle $ANGLE ..."
-curl http://arduino.fritz.box/?$KEY=$ANGLE
+echo -n "$1" > /dev/udp/arduino.fritz.box/3000
