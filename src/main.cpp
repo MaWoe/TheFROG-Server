@@ -9,22 +9,8 @@
 #include "helpers.h"
 #include "main.h"
 #include "secrets.h"
+#include "wemos_pins.h"
 
-static const uint8_t WEMOS_D0 = 16;
-static const uint8_t WEMOS_D1 = 5;
-static const uint8_t WEMOS_D2 = 4;
-static const uint8_t WEMOS_D3 = 0;
-static const uint8_t WEMOS_D4 = 2;
-static const uint8_t WEMOS_D5 = 14;
-static const uint8_t WEMOS_D6 = 12;
-static const uint8_t WEMOS_D7 = 13;
-static const uint8_t WEMOS_D8 = 15;
-static const uint8_t WEMOS_TX = 1;
-static const uint8_t WEMOS_RX = 3;
-
-// D1 = 5     D2 = 4     D3 = 0    D4 = 2
-// TX = 1     RX = 3     D0 = 16   D5 = 14
-// D6 = 12    D7 = 13    D8 = 15
 const int Servo_Drive_pin = WEMOS_D3;
 const int Servo_Steering_pin = WEMOS_D2;
 
@@ -32,12 +18,15 @@ const unsigned int LOCAL_UDP_PORT = 3000;
 const int UDP_SCAN_DELAY_MS = 2;
 
 /**
- * Steering -
- * Drive -  |
- *       |  |
- *     123:432
+ * Format:
+ *
+ * Steering ----+
+ * Drive ---+   |
+ * Sequence |   |
+ * \_______ \__ \__
+ * 000001AE:090:080
  */
-const int UDP_IN_BUFFER_SIZE = 7;
+const int UDP_IN_BUFFER_SIZE = 16;
 char udpInBuffer[UDP_IN_BUFFER_SIZE + 1];
 
 WiFiUDP udp;
@@ -71,8 +60,9 @@ void loop() {
 
     String udpBody = String(udpInBuffer);
 
-    int drive = getBoundedValue(udpBody.substring(0, 3).toInt());
-    int steering = getBoundedValue(udpBody.substring(4, 7).toInt());
+    int packetSequence = udpBody.substring(0, 9).toInt();
+    int drive = getBoundedValue(udpBody.substring(9, 12).toInt());
+    int steering = getBoundedValue(udpBody.substring(13, 16).toInt());
 
     Servo_Drive.write(drive);
     Servo_Steering.write(steering);
@@ -100,29 +90,9 @@ bool readValidPacketIntoBuffer() {
 void slowDownOnPacketReceptionTimeout() {
     int timeSinceLastReception = millis() - timeOfLastReception;
     if (!fullyStoppedAfterReceptionTimeout && timeSinceLastReception > 3000) {
-
-        // Forward: 100 - 90 =  10 -> New speed:  9
-        // Neutral:  90 - 90 =  00 -> New speed:  0
-        // Backw:    80 - 90 = -10 -> New speed: -9
-
-        // Improve me:
-//        int currentSpeed = Servo_Drive.read() - 90;
-//
-//        Serial << "Debug: " << currentSpeed - (timeSinceLastReception / 1000) << endl;
-//
-//        int newSpeed;
-//        if (currentSpeed > 0) {
-//            newSpeed = max(0, currentSpeed - (timeSinceLastReception / 1000));
-//        } else if (currentSpeed < 0) {
-//            newSpeed = min(0, currentSpeed + (timeSinceLastReception / 1000));
-//        } else {
-//            newSpeed = 0;
-//            fullyStoppedAfterReceptionTimeout = true;
-//        }
-//
-//        Serial << "Last packet was received " << timeSinceLastReception << " ms ago." << endl;
-//        Serial << "Old speed was: " << currentSpeed << ". New speed is: " << newSpeed << endl;
-//        Servo_Drive.write(newSpeed + 90);
+        // Improve me (slow down in steps):
+        Servo_Drive.write(90);
+        fullyStoppedAfterReceptionTimeout = true;
     }
 }
 
