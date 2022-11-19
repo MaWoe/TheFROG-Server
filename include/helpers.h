@@ -24,4 +24,35 @@ String dereferenceWiFiState(int state) {
     }
 }
 
+bool tryConnect(const char *ssid, const char *password) {
+    WiFi.begin(ssid, password);
+    int lastStatus = 999;
+    int tries = 1;
+    Serial.printf("Try connecting to SSID \"%s\" ...\n", ssid);
+    while (WiFi.status() != WL_CONNECTED && tries <= 5) {
+        delay(500);
+        int currentStatus = WiFi.status();
+        if (lastStatus != currentStatus) {
+            lastStatus = currentStatus;
+            Serial << "> #" << tries << ": " << dereferenceWiFiState(currentStatus) << endl;
+            if (currentStatus == WL_NO_SSID_AVAIL) {
+                Serial.println("> Giving up!");
+                return false;
+            }
+            tries++;
+        }
+    }
+
+    bool success = WiFi.status() == WL_CONNECTED;
+
+    if (success) {
+        Serial.println("OK - IP Address: ");
+        Serial.println(WiFi.localIP());
+    } else {
+        Serial.println("FAIL\n");
+    }
+
+    return success;
+}
+
 #endif //THEFROG_HELPERS_H

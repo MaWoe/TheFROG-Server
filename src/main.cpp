@@ -64,6 +64,8 @@ void loop() {
     int drive = getBoundedValue(udpBody.substring(9, 12).toInt());
     int steering = getBoundedValue(udpBody.substring(13, 16).toInt());
 
+    Serial << "D:" << drive << " S:" << steering << endl;
+
     Servo_Drive.write(drive);
     Servo_Steering.write(steering);
 }
@@ -120,20 +122,15 @@ int getBoundedValue(int rawValue) {
 
 void connectWifi() {
     Serial.println("Attempting WIFI connection");
-    WiFi.begin(ssid, password);
-    int lastStatus = 999;
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
-        int currentStatus = WiFi.status();
-        if (lastStatus != currentStatus) {
-            lastStatus = currentStatus;
-            Serial.println(dereferenceWiFiState(currentStatus));
-        }
+    while (true) {
+        if (tryConnect(ssid1, password1)) {
+            return;
+        };
+
+        if (tryConnect(ssid2, password2)) {
+            return;
+        };
     }
-    Serial.println("");
-    Serial.println("WiFi verbunden");
-    Serial.println("IP Addresse: ");
-    Serial.println(WiFi.localIP());
 }
 
 void scanNetworks() {

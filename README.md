@@ -18,4 +18,10 @@ Waits for UDP packets to control my FROG RC car.
 
 5. Start IP cam on Smartphone
 
-   
+## Hardware
+
+d1 WIFI
+
+Pin connectors:
+* D2: Steering
+* D3: Drive
