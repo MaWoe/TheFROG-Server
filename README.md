@@ -29,3 +29,7 @@ d1 WIFI
 Pin connectors:
 * D2: Steering
 * D3: Drive
+
+## Repositories involved
+* This one (https://github.com/MaWoe/TheFROG-Server)
+* https://github.com/MaWoe/TheFROG-App
